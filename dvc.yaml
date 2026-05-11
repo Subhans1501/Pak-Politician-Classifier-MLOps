@@ -1,0 +1,20 @@
+stages:
+  train:
+    cmd: python scripts/train.py
+    deps:
+      - scripts/train.py
+      - scripts/model_architectures.py
+      - dataset/split/train
+    outs:
+      - saved_models/ResNet50_politicians.h5
+      - saved_models/EfficientNetB0_politicians.h5
+  evaluate:
+    cmd: python scripts/evaluate.py
+    deps:
+      - scripts/evaluate.py
+      - saved_models/ResNet50_politicians.h5
+      - saved_models/EfficientNetB0_politicians.h5
+      - dataset/split/test
+    outs:
+      - confusion_matrix_ResNet50.png
+      - confusion_matrix_EfficientNetB0.png
