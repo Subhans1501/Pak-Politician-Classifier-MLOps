@@ -16,3 +16,4 @@ mlruns/
 # Python Caches
 __pycache__/
 *.pyc
+*.pem
