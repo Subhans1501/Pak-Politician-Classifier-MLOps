@@ -1,0 +1,10 @@
+tensorflow==2.16.1
+mlflow
+dvc[s3]
+fastapi
+uvicorn
+icrawler
+scikit-learn
+matplotlib
+seaborn
+split-folders
