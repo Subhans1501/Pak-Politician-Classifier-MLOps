@@ -1,4 +1,5 @@
 tensorflow==2.16.1
+python-multipart
 mlflow
 dvc[s3]
 fastapi
