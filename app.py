@@ -23,6 +23,12 @@ def patched_input_init(self, **kwargs):
     original_input_init(self, **kwargs)
 tf.keras.layers.InputLayer.__init__ = patched_input_init
 
+original_dense_init = tf.keras.layers.Dense.__init__
+def patched_dense_init(self, **kwargs):
+    kwargs.pop('quantization_config', None)
+    original_dense_init(self, **kwargs)
+tf.keras.layers.Dense.__init__ = patched_dense_init
+
 app = FastAPI(title="Pakistani Politician Classifier API", version="1.0")
 
 MODEL_PATH = "saved_models/ResNet50_politicians.h5"
