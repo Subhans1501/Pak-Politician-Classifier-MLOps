@@ -6,15 +6,31 @@ import numpy as np
 from PIL import Image
 import io
 import os
+
+original_input_init = tf.keras.layers.InputLayer.__init__
+
+def patched_input_init(self, **kwargs):
+
+    if 'batch_shape' in kwargs:
+        kwargs['batch_input_shape'] = kwargs.pop('batch_shape')
+    kwargs.pop('optional', None)
+
+    original_input_init(self, **kwargs)
+
+tf.keras.layers.InputLayer.__init__ = patched_input_init
+
 app = FastAPI(title="Pakistani Politician Classifier API", version="1.0")
 MODEL_PATH = "saved_models/ResNet50_politicians.h5"
 
+# Load the model safely
 if os.path.exists(MODEL_PATH):
-    model = tf.keras.models.load_model(MODEL_PATH,compile=False)
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
+    print("Model successfully loaded!")
 else:
     model = None
     print(f"Warning: Model not found at {MODEL_PATH}. Ensure 'dvc pull' was executed.")
 
+# Class labels
 CLASSES = [
     "ali_wazir", "asif_ali_zardari", "benazir_bhutto", "bilawal_bhutto",
     "fawad_chaudhry", "hamza_shahbaz", "imran_khan", "jahangir_tareen",
@@ -42,6 +58,7 @@ async def predict_image(file: UploadFile = File(...)):
         img_array = tf.keras.preprocessing.image.img_to_array(image)
         img_array = np.expand_dims(img_array, axis=0)
         img_array = preprocess_input(img_array) 
+        
         predictions = model.predict(img_array)
         predicted_class_idx = np.argmax(predictions[0])
         confidence = float(predictions[0][predicted_class_idx])
@@ -53,3 +70,6 @@ async def predict_image(file: UploadFile = File(...)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
