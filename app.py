@@ -10,7 +10,7 @@ app = FastAPI(title="Pakistani Politician Classifier API", version="1.0")
 MODEL_PATH = "saved_models/ResNet50_politicians.h5"
 
 if os.path.exists(MODEL_PATH):
-    model = tf.keras.models.load_model(MODEL_PATH)
+    model = tf.keras.models.load_model(MODEL_PATH,compile=False)
 else:
     model = None
     print(f"Warning: Model not found at {MODEL_PATH}. Ensure 'dvc pull' was executed.")
