@@ -17,3 +17,4 @@ mlruns/
 __pycache__/
 *.pyc
 *.pem
+mlflow.db
