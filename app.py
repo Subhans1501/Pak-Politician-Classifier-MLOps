@@ -7,22 +7,10 @@ from PIL import Image
 import io
 import os
 
-original_input_init = tf.keras.layers.InputLayer.__init__
-
-def patched_input_init(self, **kwargs):
-
-    if 'batch_shape' in kwargs:
-        kwargs['batch_input_shape'] = kwargs.pop('batch_shape')
-    kwargs.pop('optional', None)
-
-    original_input_init(self, **kwargs)
-
-tf.keras.layers.InputLayer.__init__ = patched_input_init
-
 app = FastAPI(title="Pakistani Politician Classifier API", version="1.0")
+
 MODEL_PATH = "saved_models/ResNet50_politicians.h5"
 
-# Load the model safely
 if os.path.exists(MODEL_PATH):
     model = tf.keras.models.load_model(MODEL_PATH, compile=False)
     print("Model successfully loaded!")
@@ -30,7 +18,6 @@ else:
     model = None
     print(f"Warning: Model not found at {MODEL_PATH}. Ensure 'dvc pull' was executed.")
 
-# Class labels
 CLASSES = [
     "ali_wazir", "asif_ali_zardari", "benazir_bhutto", "bilawal_bhutto",
     "fawad_chaudhry", "hamza_shahbaz", "imran_khan", "jahangir_tareen",
@@ -40,19 +27,22 @@ CLASSES = [
 
 @app.get("/")
 def health_check():
+    """Simple health check to see if the API is alive and the model is loaded."""
     return {"status": "Active", "model_loaded": model is not None}
 
 @app.post("/predict")
 async def predict_image(file: UploadFile = File(...)):
+    """Accepts an image file, preprocesses it for ResNet50, and returns the predicted politician."""
     if not model:
         raise HTTPException(status_code=503, detail="Model not loaded on server.")
     
     if not file.content_type.startswith("image/"):
-        raise HTTPException(status_code=400, detail="File provided is not an image.")
+        raise HTTPException(status_code=400, detail="File provided is not an image. Please upload a JPG or PNG.")
 
     try:
         contents = await file.read()
         image = Image.open(io.BytesIO(contents)).convert("RGB")
+
         image = image.resize((224, 224))
         
         img_array = tf.keras.preprocessing.image.img_to_array(image)
@@ -70,6 +60,7 @@ async def predict_image(file: UploadFile = File(...)):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error processing image: {str(e)}")
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8000)
